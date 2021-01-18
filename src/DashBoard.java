@@ -8,23 +8,62 @@ import java.util.Map;
 public class DashBoard {
     public static void main(String[] args) throws IOException {
         // token 가져오기
-        Token secretKey = new Token();
-        String token = secretKey.getToken();   // Github Token 가져오기
+        Token key = new Token();
 
         // repo 연동
-        GitHub github = new GitHubBuilder().withOAuthToken(token).build();
-        GHRepository repository = github.getRepository("youngjinmo/live-study").getParent();   // Repository 가져오기
+        GHRepository repository = getRepository(key);
 
-        // Issue 가져오기
-        List<GHIssue> issues = repository.getIssues(GHIssueState.ALL);   // 이슈 상태(open/close)와 상관없이 모두 가져오기
-        int issueCount = issues.size();   // 이슈 갯수 가져오기
+        // 전체 이슈 갯수 가져오기
+        int countAllIssues = getCountParticipant(repository);
 
-        // 참여자 정보(이름, 참여횟수) 담을 Map 변수 선언
+        // 참여자 정보(이름, 참여횟수) 가져오기
+        Map<String, Integer> members = getParticipants(repository, countAllIssues);
+
+        // 멤버이름과 참여율 출력하기
+        printOutParticipantsRate(members, countAllIssues);
+
+    }
+
+    /**
+     * Token 가져와서 Repository를 만들어서 반환
+     *
+     * @param key
+     * @return
+     * @throws IOException
+     */
+    private static GHRepository getRepository(Token key) throws IOException {
+        String token = key.getToken();   // token 가져오기
+        GitHub github = new GitHubBuilder().withOAuthToken(token).build();   // token으로 github 빌드
+        return github.getRepository("youngjinmo/live-study").getParent();
+    }
+
+    /**
+     *  Repository의 이슈 갯수 가져오기
+     *
+     * @param repository
+     * @return
+     * @throws IOException
+     */
+    private static int getCountParticipant(GHRepository repository) throws IOException {
+        // 이슈 상태(open/close)와 상관없이 모두 가져오기
+        List<GHIssue> issues = repository.getIssues(GHIssueState.ALL);
+        return issues.size();
+    }
+
+    /**
+     *  이슈의 댓글에서 참여자 이름과 참여횟수 가져오기
+     *
+     * @param repository
+     * @param countAllIssues
+     * @return
+     * @throws IOException
+     */
+    private static Map<String, Integer> getParticipants(GHRepository repository, int countAllIssues) throws IOException {
         Map<String, Integer> members = new HashMap<>();
 
-        // 이슈 댓글 가져오기
-        for (int i = 1; i <= issueCount; i++) {
-            GHIssue issue = repository.getIssue(i);    // Github Issue 가져오기
+        // Repository의 Issue들을 iterator 돌려서 개별 이슈 가져오기
+        for (int i = 1; i <= countAllIssues; i++) {
+            GHIssue issue = repository.getIssue(i);   // issue 가져오기
             int commentCnt = issue.getComments().size();  // 각 이슈별 댓글 수 가져오기
 
             // 각 이슈에서 iterator 돌려서 댓글에서 이름 추출
@@ -39,16 +78,22 @@ public class DashBoard {
                 } else {
                     members.put(memberName, ++participantCnt);
                 }
-
             }
         }
+        return members;
+    }
 
-        // 멤버이름과 참여율 출력하기
-        for (String name : members.keySet()) {
-            double participants = Double.valueOf(members.get(name));  // 참여횟수의 타입을 double로 캐스팅
-            double rate = participants/issueCount;   // 참여율 계산
+    /**
+     *  멤버 이름과 참여율 출력
+     *
+     * @param data
+     * @param countAllIssues
+     */
+    private static void printOutParticipantsRate(Map<String, Integer> data, int countAllIssues){
+        for (String name : data.keySet()) {
+            double participants = Double.valueOf(data.get(name));  // 참여횟수의 타입을 double로 캐스팅
+            double rate = participants/countAllIssues;   // 참여율 계산
             System.out.printf("%s : %10.2f\n",name,rate);
         }
-
     }
 }
