@@ -62,7 +62,7 @@ public class DashBoard {
         Map<String, Integer> members = new HashMap<>();
 
         // Repository의 Issue들을 iterator 돌려서 개별 이슈 가져오기
-        for (int i = 1; i <= countAllIssues; i++) {
+        for (int i = countAllIssues-1; i>=0; i--) {
             GHIssue issue = repository.getIssue(i);   // issue 가져오기
             int commentCnt = issue.getComments().size();  // 각 이슈별 댓글 수 가져오기
 
@@ -76,7 +76,7 @@ public class DashBoard {
                     participantCnt =  members.get(memberName);  // 컬렉션에서 참여횟수 가져오기
                     members.put(memberName, ++participantCnt);
                 } else {
-                    members.put(memberName, ++participantCnt);
+                    members.put(memberName, participantCnt);
                 }
             }
         }
@@ -91,9 +91,8 @@ public class DashBoard {
      */
     private static void printOutParticipantsRate(Map<String, Integer> data, int countAllIssues){
         for (String name : data.keySet()) {
-            double participants = Double.valueOf(data.get(name));  // 참여횟수의 타입을 double로 캐스팅
-            double rate = participants/countAllIssues;   // 참여율 계산
-            System.out.printf("%s : %10.2f\n",name,rate);
+            double rate = (double)data.get(name)/(double)countAllIssues;   // 참여율 계산
+            System.out.printf("\n%-20s : %10.2f%s",name,rate,"%");
         }
     }
 }
