@@ -7,11 +7,11 @@ import java.util.Map;
 
 public class DashBoard {
     public static void main(String[] args) throws IOException {
-        // token 가져오기
-        Token key = new Token();
+
+        final String repo = "youngjinmo/live-study";
 
         // repo 연동
-        GHRepository repository = getRepository(key);
+        GHRepository repository = getRepository(repo);
 
         // 전체 이슈 갯수 가져오기
         int countAllIssues = getCountParticipant(repository);
@@ -25,16 +25,18 @@ public class DashBoard {
     }
 
     /**
-     * Token 가져와서 Repository를 만들어서 반환
+     *  Token 가져와서 Repository를 만들어서 반환
      *
-     * @param key
+     * @param repo
      * @return
      * @throws IOException
      */
-    private static GHRepository getRepository(Token key) throws IOException {
-        String token = key.getToken();   // token 가져오기
+    private static GHRepository getRepository(String repo) throws IOException {
+        Token githubToken = new Token();
+        String token = githubToken.getToken();   // token 가져오기
+
         GitHub github = new GitHubBuilder().withOAuthToken(token).build();   // token으로 github 빌드
-        return github.getRepository("youngjinmo/live-study").getParent();
+        return github.getRepository(repo).getParent();
     }
 
     /**
